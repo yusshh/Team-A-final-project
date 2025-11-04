@@ -1,141 +1,168 @@
+﻿# Text Summarization Project
 
-# ![gify](https://github.com/user-attachments/assets/458b8f62-cfe9-4114-8277-7ece42cca54f)
-ParaGlow – Reimagine Your Words
+# Text Summarization Project
+🧠✨ Text Summarization Project
 
-An **AI-powered text transformation system** built with Streamlit, Groq, and Hugging Face. ParaGlow provides high-speed, intelligent summarization and advanced text rephrasing capabilities through a modern, responsive user interface.
+Welcome to the *Text Summarization App* — a smart and interactive NLP-based web application that automatically condenses long pieces of text into short, meaningful summaries using state-of-the-art machine learning models. 🚀  
 
-The project utilizes a professional, **refactored, and scalable architecture**, ensuring clear separation of configuration, application logic, and styling for easy maintenance and deployment.
+This project is built with *Streamlit, **Python, and **Hugging Face Transformers, providing both *extractive and abstractive summarization capabilities along with an elegant UI.  
 
-***
+---
 
-## 🚀 Features
+## 🌟 Overview  
 
-* **Intelligent Summarization:** Provides two distinct modes: Abstractive (Hugging Face BART) and Extractive.
-* **High-Speed Paraphrasing:** Leverages Groq's LPU-based architecture for near-instant text rephrasing.
-* **Live Text Analytics:** A **new feature** that displays real-time word count, character count, and estimated reading time beneath the input box.
-* **Dynamic UI:** Custom, modern interface built with external CSS for easy themeing.
-* **Configuration-Driven:** Uses `config.yaml` for file paths and `.env` for managing secret API keys.
+Have you ever needed to summarize long articles, research papers, or news content quickly?  
+This app does that for you — just *paste your text, click **Summarize*, and watch the magic happen! ✨  
 
-***
+It combines multiple NLP modules to:
+- Understand context and key information  
+- Generate concise, human-like summaries  
+- Paraphrase and refine the output for clarity  
 
-## 🏗️ Architecture
+---
 
-The project's structure emphasizes modularity and separation of concerns:
+## 🧩 Project Structure
 
-```
+TEXT_SUMMARIZATION/
+├── assets/
+│   └── style.css
+├── mvp/
+│   ├── AbstractiveSummarizer.py
+│   ├── ExtractiveSummarizer.py
+│   ├── combinedPipeline.py
+│   ├── paraphraser.py
+│   ├── exceptions.py
+│   └── _init_.py
+├── src/
+├── .env
+├── .gitignore
+├── app.py
+├── config.yaml
+├── pyproject.toml
+├── requirements.txt
+└── README.md
 
-Infosys\_Data\_Preprocessing-main/
-├── app.py                          \# Main Streamlit application entry point
-├── config.yaml                     \# Configuration settings (file paths, artifacts)
-├── style.css                       \# All custom CSS styling and themes
-├── README.md                       \# This file
-├── requirements.txt                \# Python dependencies
-│
-├── logs/
-│   └── app.log                     \# Central application log file
-│
-└── src/
-├── **init**.py                 \# Python package marker
-├── exception.py                \# Custom exception handling class (logs detailed tracebacks)
-├── logger.py                   \# Centralized application logging setup
-├── utils.py                    \# Utility functions (load\_config, load\_css)
-│
-└── mvp/
-├── processor.py            \# Main Model Processor
-├── hf\_summarizer.py        \# Abstractive summarizer module
-├── text\_extractor.py       \# Extractive summarizer module
-└── groq\_rewriter.py        \# Groq paraphraser module
+---
 
-````
+## ⚙ Installation & Setup  
 
-***
+Follow these simple steps to get the app running locally 👇  
 
-## 🛠️ Tech Stack
-
-| Component | Technology | Role |
-| :--- | :--- | :--- |
-| **Frontend** | Streamlit | Rapidly built web interface and reactive UI |
-| **Backend** | Python 3.10+ | Core application logic and API integration |
-| **AI/LLM** | Hugging Face BART | Provides Abstractive Summarization capability |
-| **Inference** | Groq (LPU) | Provides high-speed, low-latency Paraphrasing |
-| **Configuration** | `PyYAML`, `python-dotenv` | Manages structured settings and sensitive environment variables |
-
-***
-
-## 🔧 Installation
-
-### Local Development
-
-1.  **Clone the repository**
-    ```bash
-    git clone <your-repository-url>
-    cd Infosys_Data_Preprocessing-main
-    ```
-
-2.  **Create and activate virtual environment**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
-
-3.  **Install dependencies**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Set up environment variables**
-    Create a **`.env`** file in the root directory:
-    ```ini
-    HF_API_KEY="YOUR_HUGGINGFACE_KEY_GOES_HERE"
-    GROQ_API_KEY="YOUR_GROQ_KEY_GOES_HERE"
-    ```
-
-5.  **Start the application**
-    ```bash
-    streamlit run app.py
-    ```
-
-## 🧪 Testing
-
-The refactored architecture allows for testing individual components to ensure reliability.
-
-*Open a terminal with your `(venv)` active and your `.env` file present.*
-
+### 1️⃣ Clone this Repository  
 ```bash
-# Test the overall model integration and flow
-python src/mvp/processor.py
+git clone https://github.com/your-username/Text_Summarization.git
+cd Text_Summarization
 
-# Test a specific component (e.g., Groq Paraphraser)
-python src/mvp/groq_rewriter.py
-````
+2️⃣ Create a Virtual Environment
 
------
+python -m venv venv
 
-## 🤝 Contributing
+Activate it:
 
-Contributions, issues, and feature requests are welcome\!
+Windows: venv\Scripts\activate
 
-1.  Fork the repository
-2.  Create a feature branch (`git checkout -b feature/enhanced-analytics`)
-3.  Commit your changes (`git commit -m 'Added estimated reading time metric'`)
-4.  Push to the branch (`git push origin feature/enhanced-analytics`)
-5.  Open a Pull Request
+macOS/Linux: source venv/bin/activate
 
------
 
-## 🔮 Future Enhancements
+3️⃣ Install Dependencies
 
-  * Integration with multi-modal LLMs for complex text analysis.
-  * Ability to summarize external documents (`.pdf`, `.txt`).
-  * Batch processing capability.
-  * Advanced controls for paraphrasing tone (e.g., "more formal," "more casual").
+pip install -r requirement.txt
 
------
-## License
+4️⃣ Add Your Environment Variables
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Create a .env file in the root directory if needed (for API keys or Hugging Face access tokens). Example:
 
-<!-- end list -->
+HF_TOKEN=your_huggingface_token_here
 
-```
-```
+5️⃣ Run the Streamlit App
+
+streamlit run app.py
+
+Once the app starts, open the provided link (default: http://localhost:8501) in your browser 🌐
+
+
+---
+
+🧠 Features
+
+🚀 Abstractive Summarization – Generates new sentences capturing the true essence of the text.
+🧾 Extractive Summarization – Selects the most important sentences directly from the text.
+🔁 Paraphrasing Support – Enhances and refines the summary output.
+🎨 Streamlit UI – Clean, minimal, and interactive web interface.
+⚙ Custom Pipeline Design – Easy to extend for additional NLP functionalities.
+💡 Error Handling – Graceful handling of invalid inputs and processing failures.
+
+
+---
+
+🛠 Tech Stack
+
+Category	Technologies Used
+
+Frontend	Streamlit 🎈
+Backend	Python 🐍
+NLP Models	Hugging Face 🤗 Transformers
+Data Handling	PyTorch / TensorFlow
+Environment	dotenv, YAML configs
+
+
+
+---
+
+🧾 Example Use Case
+
+You can use this app for:
+
+📰 Summarizing News Articles
+
+📚 Reducing Research Papers to Abstracts
+
+💬 Condensing Chat or Email Conversations
+
+🧾 Creating Bullet-Point Notes from Long Texts
+
+
+
+---
+
+🚀 Future Enhancements
+
+✨ Add support for multi-language summarization
+✨ Integrate voice input/output
+✨ Deploy on Streamlit Cloud / Hugging Face Spaces
+✨ Add summary length and tone customization
+✨ Improve UI animations and responsiveness
+
+
+---
+
+📸 App Preview
+
+> 💡 Screenshot or demo video link can go here once the app is hosted online.
+
+
+
+
+---
+
+👨‍💻 Author
+
+Developed with ❤ by Ayush Yele
+📧 For queries or collaboration, reach out via GitHub or LinkedIn.
+
+
+---
+
+🪪 License
+
+This project is open-source and distributed under the MIT License.
+You are free to use, modify, and distribute it with proper attribution.
+
+
+---
+
+⭐ If you like this project, please give it a Star on GitHub — it motivates me to build more! 🌟
+
+---
+
+Would you like me to make a *second version* of this README that’s more *portfolio-friendly* (with a modern, aesthetic layout like what recruiters or open-source contributors love)?
