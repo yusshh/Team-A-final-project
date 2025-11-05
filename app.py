@@ -1,209 +1,242 @@
+# app.py (Final Polished Version with About at Bottom)
 import streamlit as st
-from mvp.combinedPipeline import SummarizationPipeline
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 
-# ---------- Load Local CSS ----------
-def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# === Path Setup ===
+BASE_DIR = Path(__file__).resolve().parent
+SRC_DIR = BASE_DIR / "src"
+sys.path.append(str(SRC_DIR))
 
-local_css("assets/style.css")
+# === Import Local Pipeline ===
+from src.combinedPipeline import SummarizationPipeline
 
-# Optional animation support
-try:
-    from streamlit_lottie import st_lottie
-    LOTTIE_AVAILABLE = True
-except Exception:
-    LOTTIE_AVAILABLE = False
+# === Load Environment Variables ===
+load_dotenv(SRC_DIR / ".env")
+HF_TOKEN = os.getenv("HF_API_KEY")
 
-# ---------- Load Environment ----------
-load_dotenv()
+# === Streamlit Page Setup ===
+st.set_page_config(
+    page_title="AI Text Summarizer and Paraphraser",
+    page_icon="📝",
+    layout="wide"
+)
 
-# ---------- Page Setup ----------
-st.set_page_config(page_title="Text Morph", page_icon="🧠", layout="wide")
-
-# ---------- Custom Header ----------
+# === Custom CSS Styling ===
 st.markdown("""
-    <style>
-    .title {
-        font-size: 4rem;
-        font-weight: 800;
-        text-align: left;
-        margin-bottom: 0.3rem;
-        letter-spacing: -1px;
-        background: linear-gradient(90deg, #818cf8, #a78bfa, #f472b6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(167, 139, 250, 0.4);
-    }
-    .subtitle {
-        font-size: 1.2rem;
-        color: #d1d5db !important;
-        margin-bottom: 1.5rem;
-        opacity: 0.9;
-    }
-    .footer {
-        text-align: center;
-        margin-top: 4rem;
-        padding: 1rem 0;
-        background: rgba(30, 41, 59, 0.6);
-        backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(156, 163, 175, 0.3);
-        color: #f3f4f6 !important;
-        font-size: 15px;
-        box-shadow: 0 -2px 20px rgba(99, 102, 241, 0.2);
-    }
-    .footer span {
-        color: #a78bfa;
-        font-weight: 700;
-        text-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
-    }
-    </style>
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* Buttons */
+.stButton>button {
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    transition: 0.25s;
+}
+.stButton>button:hover {
+    transform: scale(1.03);
+}
+
+/* Output box */
+.output-box {
+    background: #f7f9fc;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+    min-height: 300px;
+}
+
+/* Sidebar About Section */
+.about-box {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+.about-box summary {
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+.about-box summary:hover {
+    background: #e0e7ff;
+}
+.about-box ul {
+    margin: 0.25rem 0 0.5rem 1rem;
+    padding: 0;
+    font-size: 0.9rem;
+    list-style: none;
+}
+.about-box ul li::before {
+    content: "•";
+    color: #6366f1;
+    font-weight: bold;
+    display: inline-block; 
+    width: 1em;
+    margin-left: -1em;
+}
+</style>
 """, unsafe_allow_html=True)
 
-# ---------- Header ----------
-col1, col2 = st.columns([3, 1])
-with col1:
-    st.markdown('<div class="title">Text Morph</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">AI-powered summarization & paraphrasing — fast, clean, and simple.</div>', unsafe_allow_html=True)
-with col2:
-    if LOTTIE_AVAILABLE:
-        st_lottie(
-            {
-                "v": "5.5.7",
-                "fr": 30,
-                "ip": 0,
-                "op": 60,
-                "w": 200,
-                "h": 200,
-                "nm": "spark",
-                "ddd": 0,
-                "assets": [],
-                "layers": [],
-            },
-            height=120,
-        )
-    else:
-        st.image("https://img.icons8.com/fluency/96/artificial-intelligence.png", width=80)
+# === Function: Save File ===
+def save_file(content: str, filename: str):
+    """Save text output to Downloads folder."""
+    try:
+        downloads = Path.home() / "Downloads"
+        path = downloads / filename
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return str(path)
+    except Exception:
+        return None
 
-st.markdown("---")
+# === Initialize Session Variables ===
+for key in ("text_input", "text_output", "mode"):
+    if key not in st.session_state:
+        st.session_state[key] = ""
 
-# ---------- API Key ----------
-HF_API_KEY = os.getenv("HF_API_KEY")
-if not HF_API_KEY:
-    st.error("⚠ Hugging Face API key not found. Please add HF_API_KEY to your .env or Streamlit secrets.")
+# === API Key Check ===
+if not HF_TOKEN:
+    st.error("⚠️ Missing Hugging Face API Key. Add it in `src/.env`.")
+    st.markdown(
+        "Get one here: [Hugging Face Tokens](https://huggingface.co/settings/tokens)"
+    )
     st.stop()
 
-# ---------- Pipeline Initialization ----------
+# === Load Pipeline ===
 @st.cache_resource
-def load_pipeline():
-    return SummarizationPipeline(HF_API_KEY)
+def get_pipeline():
+    return SummarizationPipeline(HF_TOKEN)
 
-pipeline = load_pipeline()
+try:
+    model_pipeline = get_pipeline()
+except Exception as e:
+    st.error(f"Failed to initialize pipeline: {e}")
+    st.stop()
 
-# ---------- Sidebar ----------
+# === Sidebar ===
 with st.sidebar:
-    st.header("⚙ Settings")
-    method = st.radio("Summarization Type", ["Extractive", "Abstractive"], index=1)
-    length = st.select_slider("Summary Length", ["Short", "Medium", "Long"], value="Medium")
-    st.markdown("---")
-    st.info("✅ API Connected")
-
-    # ---------- About Section ----------
-    st.markdown(
-        """
-        <div class="about-section">
-            <h2>🧠 About My App</h2>
-            <p>
-                This AI-powered Text Summarizer and Paraphraser helps you quickly condense large text 
-                into concise summaries or rephrase it for better readability. 
-                It’s built using <b>Streamlit</b> and <b>Natural Language Processing (NLP)</b> models.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-
-# ---------- Layout ----------
-left, right = st.columns([1.1, 1])
-
-# ---------- Input Section ----------
-with left:
-    st.subheader("📝 Input")
-    input_text = st.text_area("Paste or type your text here", height=320, placeholder="Paste article, paragraph, or notes…")
-
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        summarize_btn = st.button("✨ Summarize", use_container_width=True)
-    with c2:
-        paraphrase_btn = st.button("🔄 Paraphrase", use_container_width=True)
-    with c3:
-        clear_btn = st.button("🧹 Clear")
-
-    if clear_btn:
-        st.session_state.clear()
-        st.experimental_rerun()
-
-# ---------- Output Section ----------
-with right:
-    st.subheader("📊 Output")
-
-    if summarize_btn and input_text:
-        with st.spinner("🔄 Summarizing your text... Please wait."):
-            try:
-                summary = pipeline.summarize(
-                    input_text, method=method.lower(), length=length.lower()
-                )
-                st.success("✅ Summary Generated!")
-                st.markdown(
-                    f"<div class='output-card'><h4>🧠 Summary</h4><p>{summary}</p></div>",
-                    unsafe_allow_html=True,
-                )
-
-                col_d1, col_d2 = st.columns(2)
-                with col_d1:
-                    st.download_button(
-                        "⬇ Download Summary",
-                        summary,
-                        file_name="summary.txt",
-                        mime="text/plain",
-                    )
-                with col_d2:
-                    st.button("📋 Copy", key="copy_summary")
-
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-
-    elif paraphrase_btn and input_text:
-        with st.spinner("🔁 Paraphrasing your text... Please wait."):
-            try:
-                paraphrased_text = pipeline.paraphrase(input_text)
-                st.success("✅ Paraphrased Successfully!")
-                st.markdown(
-                    f"<div class='output-card'><h4>✏ Paraphrased Text</h4><p>{paraphrased_text}</p></div>",
-                    unsafe_allow_html=True,
-                )
-
-                st.download_button(
-                    "⬇ Download Paraphrased",
-                    paraphrased_text,
-                    file_name="paraphrased.txt",
-                    mime="text/plain",
-                )
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-
+    st.header("Settings")
+    task = st.radio("Select Task", ["Summarization", "Paraphrasing"])
+    if task == "Summarization":
+        style = st.selectbox("Summarization Type", ["Abstractive", "Extractive"])
+        length = st.select_slider("Summary Length", ["Short", "Medium", "Long"], "Medium")
     else:
-        st.info("👈 Enter text and click Summarize or Paraphrase to see results here.")
+        style, length = None, None
 
-        # ---------- Footer Section ----------
-st.markdown(
-    """
-    <div class='footer'>
-        Made with ❤ by <span>Ayush</span>
+    st.markdown("---")
+    st.success("Hugging Face API Connected")
+    st.caption("Using Inference API — no local model download required")
+
+    # === About Section (Bottom of Sidebar) ===
+    st.header("About")
+    st.markdown("""
+    <div class="about-box">
+        <details open>
+            <summary>🟣 Abstractive Summarization</summary>
+            <ul>
+                <li>Generates new sentences capturing the meaning of the text.</li>
+                <li>Paraphrases original content instead of copying it verbatim.</li>
+            </ul>
+        </details>
+        <details>
+            <summary>🔵 Extractive Summarization</summary>
+            <ul>
+                <li>Selects key sentences from the original text.</li>
+                <li>Combines them to form a concise summary without rephrasing.</li>
+            </ul>
+        </details>
+        <details>
+            <summary>🟢 Paraphrasing</summary>
+            <ul>
+                <li>Rewrites text using different words.</li>
+                <li>Maintains original meaning while improving readability.</li>
+            </ul>
+        </details>
     </div>
-    """,
-    unsafe_allow_html=True
+    """, unsafe_allow_html=True)
+
+# === Main Header (Plain) ===
+st.markdown("## 📝 AI Text Summarizer and Paraphraser")
+st.markdown("Powered by Hugging Face Inference (no local model download required)")
+
+# === Input Section with Icon ===
+st.subheader("🖊️ Input Text")
+input_text = st.text_area(
+    "Enter your text below:",
+    value=st.session_state.text_input,
+    height=250,
+    label_visibility="collapsed"
 )
+st.session_state.text_input = input_text
+
+col1, col2, col3 = st.columns(3)
+run_btn = col1.button("▶️ Run")
+clear_btn = col2.button("🧹 Clear")
+save_btn = col3.button("💾 Save Output")
+
+if clear_btn:
+    for k in st.session_state:
+        st.session_state[k] = ""
+    st.rerun()
+
+# === Output Section with Icon ===
+st.subheader("📄 Output")
+
+if run_btn and input_text:
+    with st.spinner("Processing with AI..."):
+        try:
+            if task == "Summarization":
+                result = model_pipeline.summarize(
+                    input_text,
+                    method=style.lower(),
+                    length=length.lower()
+                )
+                st.session_state.mode = "summary"
+            else:
+                result = model_pipeline.paraphrase(input_text)
+                st.session_state.mode = "paraphrase"
+
+            st.session_state.text_output = result
+            st.success("✅ Completed successfully.")
+            st.text_area("Result", result, height=300, label_visibility="collapsed")
+
+        except Exception as e:
+            st.error(f"⚠️ Error: {e}")
+
+elif st.session_state.text_output:
+    st.text_area("Previous Output", st.session_state.text_output, height=300, label_visibility="collapsed")
+else:
+    st.markdown("<div class='output-box'><em>Enter text above and click Run to start...</em></div>", unsafe_allow_html=True)
+
+# === Save Button ===
+if save_btn and st.session_state.text_output:
+    filename = "AI_output.txt" if st.session_state.mode == "summary" else "AI_paraphrase.txt"
+    saved_path = save_file(st.session_state.text_output, filename)
+    if saved_path:
+        st.success(f"💾 File saved to: {saved_path}")
+    else:
+        st.error("⚠️ Could not save file")
+
+# === Clean Footer ===
+st.markdown("""
+<hr style='border: none; height: 2px; background: linear-gradient(90deg, #6a11cb, #2575fc); margin-top: 2rem;'/>
+<div style='text-align:center; padding:10px 0; color:#555;'>
+    <p style='margin:0; font-size:0.9rem;'>
+        Built with <b>Streamlit</b> and <b>Hugging Face Inference API</b><br>
+        © 2025 <b>AI Text Summarizer and Paraphraser</b> | All Rights Reserved
+    </p>
+</div>
+""", unsafe_allow_html=True)
